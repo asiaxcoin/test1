@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Snake Game</title>
+<style>
+  body{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100vh;background:linear-gradient(180deg,#0f172a,#1e293b);color:#fff;font-family:sans-serif}
+  h1{margin:10px;font-size:22px}
+  #gameBox{flex:1;display:flex;align-items:center;justify-content:center;width:100%;max-width:500px}
+  canvas{background:#020617;border:2px solid #06b6d4;border-radius:8px;width:100%;height:auto}
+  #scoreBox{margin:8px;font-size:16px}
+  #controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:10px}
+  button{padding:12px 18px;font-size:16px;font-weight:bold;border:none;border-radius:10px;background:#06b6d4;color:#021226;box-shadow:0 6px 12px rgba(6,182,212,.3)}
+</style>
+</head>
+<body>
+  <h1>🐍 Snake Game</h1>
+  <div id="scoreBox">Score: <span id="score">0</span> • High: <span id="high">0</span></div>
+  <div id="gameBox"><canvas id="game" width="300" height="300"></canvas></div>
+  <div id="controls">
+    <button onclick="dir='LEFT'">⬅️</button>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="dir='UP'">⬆️</button>
+      <button onclick="dir='DOWN'">⬇️</button>
+    </div>
+    <button onclick="dir='RIGHT'">➡️</button>
+  </div>
+
+<script>
+const cvs=document.getElementById("game");
+const ctx=cvs.getContext("2d");
+let box=15; // grid size
+let snake=[{x:9*box,y:10*box}];
+let food={x:Math.floor(Math.random()*20)*box,y:Math.floor(Math.random()*20)*box};
+let dir=null;
+let score=0;
+let high=localStorage.getItem("snake_high")||0;
+document.getElementById("high").textContent=high;
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowLeft"&&dir!=="RIGHT")dir="LEFT";
+  else if(e.key==="ArrowUp"&&dir!=="DOWN")dir="UP";
+  else if(e.key==="ArrowRight"&&dir!=="LEFT")dir="RIGHT";
+  else if(e.key==="ArrowDown"&&dir!=="UP")dir="DOWN";
+});
+
+function draw(){
+  ctx.fillStyle="#020617";
+  ctx.fillRect(0,0,cvs.width,cvs.height);
+
+  // draw snake
+  for(let i=0;i<snake.length;i++){
+    ctx.fillStyle=i===0?"#34d399":"#06b6d4";
+    ctx.fillRect(snake[i].x,snake[i].y,box,box);
+    ctx.strokeStyle="#0f172a";
+    ctx.strokeRect(snake[i].x,snake[i].y,box,box);
+  }
+
+  // draw food
+  ctx.fillStyle="#facc15";
+  ctx.fillRect(food.x,food.y,box,box);
+
+  // snake head
+  let snakeX=snake[0].x;
+  let snakeY=snake[0].y;
+
+  if(dir==="LEFT") snakeX-=box;
+  if(dir==="UP") snakeY-=box;
+  if(dir==="RIGHT") snakeX+=box;
+  if(dir==="DOWN") snakeY+=box;
+
+  // eat food
+  if(snakeX===food.x && snakeY===food.y){
+    score++;
+    document.getElementById("score").textContent=score;
+    food={x:Math.floor(Math.random()*20)*box,y:Math.floor(Math.random()*20)*box};
+  }else{
+    snake.pop();
+  }
+
+  let newHead={x:snakeX,y:snakeY};
+
+  // game over
+  if(snakeX<0||snakeY<0||snakeX>=cvs.width||snakeY>=cvs.height||collision(newHead,snake)){
+    if(score>high){high=score;localStorage.setItem("snake_high",high);}
+    alert("Game Over! Your score: "+score);
+    document.location.reload();
+  }
+
+  snake.unshift(newHead);
+  document.getElementById("high").textContent=high;
+}
+
+function collision(head,array){
+  for(let i=0;i<array.length;i++){
+    if(head.x===array[i].x&&head.y===array[i].y){return true;}
+  }
+  return false;
+}
+
+setInterval(draw,120);
+</script>
+</body>
+</html>
